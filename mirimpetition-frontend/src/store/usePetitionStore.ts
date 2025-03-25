@@ -74,7 +74,7 @@ const mockPetitions: Petition[] = [
   5. 학과 간 교류 증진
   
   매 학기 1회, 연간 2회 정도의 정기 대회를 개최하여 학생들이 꾸준히 실력을 향상시킬 수 있는 환경을 만들어주시기를 요청드립니다.`,
-    category: "교육과정",
+    category: "식단",
     status: "progress" as StatusType,
     signatures: 210,
     goal: 300,
@@ -530,7 +530,7 @@ const mockPetitions: Petition[] = [
   5. 학과 간 교류 증진
   
   매 학기 1회, 연간 2회 정도의 정기 대회를 개최하여 학생들이 꾸준히 실력을 향상시킬 수 있는 환경을 만들어주시기를 요청드립니다.`,
-    category: "교육과정",
+    category: "식단",
     status: "pending" as StatusType,
     signatures: 210,
     goal: 300,

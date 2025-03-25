@@ -31,19 +31,13 @@ const sortOptions = [
 ];
 
 const PetitionList = () => {
-  const { petitions: ps, fetchPetitions } = usePetitionStore();
-  if (ps.length === 0) fetchPetitions();
+  const { petitions } = usePetitionStore();
   const [page, setPage] = useState(1);
-  const [petitions, setPetitions] = useState(ps);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [, setSortBy] = useState("latest");
   const [showFilters, setShowFilters] = useState(false);
-
-  useEffect(() => {
-    setPetitions(ps.slice((page - 1) * 9, page * 9));
-  }, [page, ps]);
 
   const filteredPetitions = petitions.filter(petition => {
     const matchesSearch = petition.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -58,14 +52,20 @@ const PetitionList = () => {
     const matchesCategory = selectedCategory === "all" || petition.category === selectedCategory;
     
     return matchesSearch && matchesTab && matchesCategory;
-  });
+  }).slice((page - 1) * 9, page * 9);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedCategory, activeTab]);
 
   const totalPages = Math.ceil(
     (searchQuery || selectedCategory !== "all" || activeTab !== "all"
       ? filteredPetitions.length
-      : ps.length) / 9
+      : petitions.length) / 9
   );
   
+
+  console.log(filteredPetitions);
 
   return (
     <Layout>
