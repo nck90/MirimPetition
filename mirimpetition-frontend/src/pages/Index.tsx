@@ -31,8 +31,7 @@ const features = [
 ];
 
 const Index = () => {
-  const { petitions, fetchPetitions } = usePetitionStore();
-  if (petitions.length === 0) fetchPetitions();
+  const { petitions } = usePetitionStore();
   const filteredPetitions = petitions
     .sort((a, b) => b.signatures - a.signatures)
     .slice(0, 4);
