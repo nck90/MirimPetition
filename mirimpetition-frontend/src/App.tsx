@@ -13,29 +13,35 @@ import NotFound from "./pages/NotFound";
 import "./index.css";
 import Notices from "./pages/Notices";
 import FAQ from "./pages/FAQ";
+import { usePetitionStore } from "./store/usePetitionStore";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/petitions" element={<PetitionList />} />
-            <Route path="/petitions/:id" element={<PetitionDetail />} />
-            <Route path="/petitions/create" element={<CreatePetition />} />
-            <Route path="/notices" element={<Notices />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const { petitions, fetchPetitions } = usePetitionStore();
+  if (petitions.length === 0) fetchPetitions();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/petitions" element={<PetitionList />} />
+              <Route path="/petitions/:id" element={<PetitionDetail />} />
+              <Route path="/petitions/create" element={<CreatePetition />} />
+              <Route path="/notices" element={<Notices />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  )
+};
 
 export default App;
