@@ -1,20 +1,22 @@
-import { IsString, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsString, IsEnum, IsNotEmpty, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PetitionCategory } from '../../entities/petition.entity';
 
 export class CreatePetitionDto {
-  @ApiProperty({ description: '청원 제목' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  title: string;
+  @MinLength(5)
+  title!: string;
 
-  @ApiProperty({ description: '청원 내용' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  content: string;
+  @MinLength(10)
+  content!: string;
 
-  @ApiProperty({ description: '청원 카테고리', enum: PetitionCategory })
+  @ApiProperty({ enum: PetitionCategory })
   @IsEnum(PetitionCategory)
   @IsNotEmpty()
-  category: PetitionCategory;
+  category!: PetitionCategory;
 } 

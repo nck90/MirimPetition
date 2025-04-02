@@ -23,7 +23,7 @@ export class SearchController {
   ) {
     try {
       this.logger.log(`Searching petitions with query: ${JSON.stringify(query)}`);
-      const result = await this.searchService.searchPetitions(query.keyword, {
+      const result = await this.searchService.searchPetitions(query.keyword || '', {
         status: query.status,
         category: query.category,
         page: query.page,

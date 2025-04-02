@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { StatisticsService } from './statistics.service';
+import { StatisticsService, PetitionStats, CategoryStatistics, UserStats } from './statistics.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('statistics')
@@ -15,21 +15,24 @@ export class StatisticsController {
   async getPetitionStatistics(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-  ) {
-    return this.statisticsService.getPetitionStatistics(startDate, endDate);
+  ): Promise<PetitionStats> {
+    return this.statisticsService.getPetitionStatistics(
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
   }
 
   @Get('categories')
   @ApiOperation({ summary: 'Get category statistics' })
   @ApiResponse({ status: 200, description: 'Category statistics' })
-  async getCategoryStatistics() {
+  async getCategoryStatistics(): Promise<CategoryStatistics> {
     return this.statisticsService.getCategoryStatistics();
   }
 
   @Get('users')
   @ApiOperation({ summary: 'Get user statistics' })
   @ApiResponse({ status: 200, description: 'User statistics' })
-  async getUserStatistics() {
+  async getUserStatistics(): Promise<UserStats> {
     return this.statisticsService.getUserStatistics();
   }
 

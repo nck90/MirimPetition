@@ -5,5 +5,5 @@ export class UploadFileDto {
   @ApiProperty({ type: 'string', format: 'binary' })
   @IsNotEmpty()
   @IsString()
-  file: Express.Multer.File;
+  file!: Express.Multer.File;
 } 

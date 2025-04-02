@@ -1,9 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
-import { Petition } from '../entities/petition.entity';
+import { Repository } from 'typeorm';
+import { Petition, PetitionStatus } from '../entities/petition.entity';
 import { User } from '../entities/user.entity';
-import { subDays } from 'date-fns';
+import { Vote } from '../entities/vote.entity';
+
+export interface CategoryStats {
+  total: number;
+  active: number;
+  closed: number;
+}
+
+export interface CategoryStatistics {
+  [key: string]: CategoryStats;
+}
+
+export interface PetitionStats {
+  total: number;
+  active: number;
+  closed: number;
+  approvalRate: number;
+}
+
+export interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  activityRate: number;
+  topContributors: Array<{
+    id: string;
+    name: string;
+    petitionCount: number;
+    voteCount: number;
+  }>;
+}
 
 @Injectable()
 export class StatisticsService {
@@ -12,123 +41,123 @@ export class StatisticsService {
     private readonly petitionRepository: Repository<Petition>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Vote)
+    private readonly voteRepository: Repository<Vote>,
   ) {}
 
-  async getPetitionStatistics(startDate?: string, endDate?: string) {
-    const where = {};
+  async getPetitionStatistics(startDate?: Date, endDate?: Date): Promise<any> {
+    const query = this.petitionRepository.createQueryBuilder('petition');
+
     if (startDate && endDate) {
-      where['createdAt'] = Between(new Date(startDate), new Date(endDate));
+      query.where('petition.createdAt BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
     }
 
-    const [total, active, closed] = await Promise.all([
-      this.petitionRepository.count(where),
-      this.petitionRepository.createQueryBuilder('petition')
-        .where('petition.status = :status', { status: 'active' })
-        .andWhere(where)
-        .getCount(),
-      this.petitionRepository.createQueryBuilder('petition')
-        .where('petition.status = :status', { status: 'closed' })
-        .andWhere(where)
-        .getCount(),
-    ]);
+    const totalPetitions = await query.getCount();
+    const activePetitions = await query
+      .where('petition.status = :status', { status: PetitionStatus.ACTIVE })
+      .getCount();
+    const closedPetitions = await query
+      .where('petition.status = :status', { status: PetitionStatus.CLOSED })
+      .getCount();
 
     return {
-      total,
-      active,
-      closed,
-      approvalRate: total > 0 ? (closed / total) * 100 : 0,
+      total: totalPetitions,
+      active: activePetitions,
+      closed: closedPetitions,
     };
   }
 
-  async getCategoryStatistics() {
-    const petitions = await this.petitionRepository.find();
-    const categories = {};
-
-    petitions.forEach(petition => {
-      if (!categories[petition.category]) {
-        categories[petition.category] = {
-          total: 0,
-          active: 0,
-          closed: 0,
-        };
-      }
-
-      categories[petition.category].total++;
-      if (petition.status === 'active') {
-        categories[petition.category].active++;
-      } else if (petition.status === 'closed') {
-        categories[petition.category].closed++;
-      }
-    });
+  async getCategoryStatistics(): Promise<any> {
+    const categories = await this.petitionRepository
+      .createQueryBuilder('petition')
+      .select('petition.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .where('petition.status = :status', { status: PetitionStatus.ACTIVE })
+      .groupBy('petition.category')
+      .getRawMany();
 
     return categories;
   }
 
-  async getUserStatistics() {
-    const [totalUsers, activeUsers] = await Promise.all([
-      this.userRepository.count(),
-      this.userRepository
-        .createQueryBuilder('user')
-        .innerJoin('user.votes', 'vote')
-        .where('vote.createdAt >= :date', {
-          date: subDays(new Date(), 30),
-        })
-        .getCount(),
-    ]);
+  async getUserStatistics(): Promise<any> {
+    const totalUsers = await this.userRepository.count();
+    const activeUsers = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.createdAt >= :date', {
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      })
+      .getCount();
 
     const topContributors = await this.userRepository
       .createQueryBuilder('user')
-      .loadRelationCountAndMap('user.petitionCount', 'user.petitions')
-      .loadRelationCountAndMap('user.voteCount', 'user.votes')
-      .orderBy('user.petitionCount', 'DESC')
-      .addOrderBy('user.voteCount', 'DESC')
-      .take(10)
-      .getMany();
+      .select([
+        'user.id',
+        'user.name',
+        'COUNT(DISTINCT petition.id) as petitionCount',
+        'COUNT(DISTINCT vote.id) as voteCount',
+      ])
+      .leftJoin('user.petitions', 'petition')
+      .leftJoin('user.votes', 'vote')
+      .groupBy('user.id')
+      .orderBy('petitionCount', 'DESC')
+      .addOrderBy('voteCount', 'DESC')
+      .limit(10)
+      .getRawMany();
 
     return {
-      totalUsers,
-      activeUsers,
-      activityRate: totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0,
-      topContributors: topContributors.map(user => ({
-        id: user.id,
-        name: user.name,
-        petitionCount: user['petitionCount'],
-        voteCount: user['voteCount'],
-      })),
+      total: totalUsers,
+      active: activeUsers,
+      topContributors,
     };
   }
 
-  async getPopularPetitions(limit: number = 10, period: string) {
+  async getPopularPetitions(limit: number = 10, period: string = 'week'): Promise<any> {
     const date = new Date();
     switch (period) {
-      case '24h':
-        date.setHours(date.getHours() - 24);
+      case 'day':
+        date.setDate(date.getDate() - 1);
         break;
-      case '7d':
+      case 'week':
         date.setDate(date.getDate() - 7);
         break;
-      case '30d':
-        date.setDate(date.getDate() - 30);
+      case 'month':
+        date.setMonth(date.getMonth() - 1);
         break;
       default:
         date.setDate(date.getDate() - 7);
     }
 
-    const petitions = await this.petitionRepository
+    return this.petitionRepository
       .createQueryBuilder('petition')
-      .leftJoinAndSelect('petition.votes', 'vote')
+      .select([
+        'petition.id',
+        'petition.title',
+        'COUNT(DISTINCT vote.id) as voteCount',
+        'COUNT(DISTINCT comment.id) as commentCount',
+      ])
+      .leftJoin('petition.votes', 'vote')
+      .leftJoin('petition.comments', 'comment')
       .where('petition.createdAt >= :date', { date })
-      .orderBy('petition.voteCount', 'DESC')
-      .take(limit)
-      .getMany();
+      .andWhere('petition.status = :status', { status: PetitionStatus.ACTIVE })
+      .groupBy('petition.id')
+      .orderBy('voteCount', 'DESC')
+      .addOrderBy('commentCount', 'DESC')
+      .limit(limit)
+      .getRawMany();
+  }
 
-    return petitions.map(petition => ({
-      id: petition.id,
-      title: petition.title,
-      category: petition.category,
-      status: petition.status,
-      voteCount: petition.voteCount,
-      createdAt: petition.createdAt,
-    }));
+  async getVoteStatistics(petitionId: string) {
+    const votes = await this.voteRepository
+      .createQueryBuilder('vote')
+      .select('vote.choice', 'choice')
+      .addSelect('COUNT(*)', 'count')
+      .where('vote.petitionId = :petitionId', { petitionId })
+      .groupBy('vote.choice')
+      .getRawMany();
+
+    return votes;
   }
 } 

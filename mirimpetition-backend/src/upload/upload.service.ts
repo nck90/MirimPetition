@@ -52,6 +52,9 @@ export class UploadService {
   async deleteFile(fileUrl: string): Promise<void> {
     try {
       const key = fileUrl.split('/').pop();
+      if (!key) {
+        throw new BadRequestException('File key is required');
+      }
       const deleteParams = {
         Bucket: this.configService.get('AWS_S3_BUCKET'),
         Key: key,
@@ -60,5 +63,13 @@ export class UploadService {
     } catch (error) {
       throw new BadRequestException('Failed to delete file');
     }
+  }
+
+  getFileUrl(key: string): string {
+    if (!key) {
+      throw new BadRequestException('File key is required');
+    }
+
+    return `https://${this.configService.get('AWS_S3_BUCKET')}.s3.${this.configService.get('AWS_REGION')}.amazonaws.com/${key}`;
   }
 } 

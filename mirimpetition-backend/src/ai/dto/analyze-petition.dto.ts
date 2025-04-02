@@ -5,15 +5,19 @@ export class AnalyzePetitionDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title?: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content?: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  category: string;
+  category?: string;
+
+  constructor(partial: Partial<AnalyzePetitionDto>) {
+    Object.assign(this, partial);
+  }
 } 

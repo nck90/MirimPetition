@@ -1,43 +1,33 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 import { User } from './user.entity';
 import { Petition } from './petition.entity';
 
 @Entity('comments')
 export class Comment {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('text')
-  content: string;
-
-  @ManyToOne(() => User, (user: User) => user.comments)
-  @JoinColumn({ name: 'userId' })
-  user: User;
-
-  @Column()
-  userId: string;
-
-  @ManyToOne(() => Petition, (petition: Petition) => petition.comments)
-  @JoinColumn({ name: 'petitionId' })
-  petition: Petition;
-
-  @Column()
-  petitionId: string;
+  content!: string;
 
   @Column({ default: false })
-  isOfficialResponse: boolean;
+  isOfficialResponse!: boolean;
+
+  @ManyToOne(() => User, (user) => user.comments)
+  user!: User;
+
+  @Column()
+  userId!: string;
+
+  @ManyToOne(() => Petition, (petition) => petition.comments)
+  petition!: Petition;
+
+  @Column()
+  petitionId!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 } 

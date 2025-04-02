@@ -3,45 +3,41 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
   ManyToOne,
-  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
-
-export enum NotificationType {
-  PETITION_STATUS = 'petition_status',
-  OFFICIAL_RESPONSE = 'official_response',
-  VOTE_REMINDER = 'vote_reminder',
-  SYSTEM = 'system',
-}
+import { NotificationType } from '../enums/notification-type.enum';
 
 @Entity('notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
+
+  @ManyToOne(() => User, (user) => user.notifications)
+  user!: User;
 
   @Column()
-  title: string;
-
-  @Column('text')
-  content: string;
+  userId!: string;
 
   @Column({
     type: 'enum',
     enum: NotificationType,
   })
-  type: NotificationType;
-
-  @Column({ default: false })
-  isRead: boolean;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  type!: NotificationType;
 
   @Column()
-  userId: string;
+  title!: string;
+
+  @Column()
+  content!: string;
+
+  @Column({ default: false })
+  isRead!: boolean;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 } 

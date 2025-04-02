@@ -6,16 +6,15 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
-  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Vote } from './vote.entity';
 import { Comment } from './comment.entity';
 
 export enum PetitionStatus {
-  PENDING = 'pending',
   ACTIVE = 'active',
   CLOSED = 'closed',
+  PENDING = 'pending',
   REJECTED = 'rejected',
 }
 
@@ -23,59 +22,66 @@ export enum PetitionCategory {
   ACADEMIC = 'academic',
   FACILITY = 'facility',
   WELFARE = 'welfare',
-  EVENT = 'event',
   OTHER = 'other',
 }
 
 @Entity('petitions')
 export class Petition {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column('text')
-  content: string;
+  content!: string;
 
   @Column({
     type: 'enum',
     enum: PetitionStatus,
     default: PetitionStatus.PENDING,
   })
-  status: PetitionStatus;
+  status!: PetitionStatus;
 
   @Column({
     type: 'enum',
     enum: PetitionCategory,
   })
-  category: PetitionCategory;
+  category!: PetitionCategory;
 
   @Column({ default: 0 })
-  voteCount: number;
+  agreeCount!: number;
 
-  @Column({ nullable: true })
+  @Column({ default: 0 })
+  disagreeCount!: number;
+
+  @Column({ default: 0 })
+  viewCount!: number;
+
+  @Column({ default: 0 })
+  voteCount!: number;
+
+  @Column({ default: false })
+  isOfficialResponse!: boolean;
+
+  @Column('text', { nullable: true })
   officialResponse?: string;
 
-  @Column({ nullable: true })
-  responseDate?: Date;
-
-  @ManyToOne(() => User, (user: User) => user.petitions)
-  @JoinColumn({ name: 'authorId' })
-  author: User;
+  @ManyToOne(() => User, (user) => user.petitions)
+  user!: User;
 
   @Column()
-  authorId: string;
+  userId!: string;
 
-  @OneToMany(() => Vote, (vote: Vote) => vote.petition)
-  votes: Vote[];
+  @OneToMany(() => Vote, (vote) => vote.petition)
+  votes!: Vote[];
 
-  @OneToMany(() => Comment, (comment: Comment) => comment.petition)
-  comments: Comment[];
+  @OneToMany(() => Comment, (comment) => comment.petition)
+  comments!: Comment[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 } 

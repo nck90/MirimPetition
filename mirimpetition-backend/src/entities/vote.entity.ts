@@ -1,45 +1,30 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
 import { User } from './user.entity';
 import { Petition } from './petition.entity';
 
 export enum VoteType {
-  APPROVE = 'approve',
-  REJECT = 'reject',
+  AGREE = 'AGREE',
+  DISAGREE = 'DISAGREE',
+  NEUTRAL = 'NEUTRAL',
 }
 
 @Entity('votes')
 export class Vote {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
-  @Column({ type: 'enum', enum: VoteType })
-  type: VoteType;
+  @Column({
+    type: 'enum',
+    enum: VoteType,
+  })
+  type!: VoteType;
 
-  @Column()
-  userId: string;
+  @ManyToOne(() => User, (user) => user.votes)
+  user!: User;
 
-  @Column()
-  petitionId: string;
-
-  @ManyToOne(() => User, user => user.votes)
-  @JoinColumn({ name: 'userId' })
-  user: User;
-
-  @ManyToOne(() => Petition, petition => petition.votes)
-  @JoinColumn({ name: 'petitionId' })
-  petition: Petition;
+  @ManyToOne(() => Petition, (petition) => petition.votes)
+  petition!: Petition;
 
   @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  createdAt!: Date;
 } 

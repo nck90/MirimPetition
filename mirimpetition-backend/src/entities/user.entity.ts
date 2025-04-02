@@ -5,59 +5,76 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  BeforeInsert,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Petition } from './petition.entity';
 import { Vote } from './vote.entity';
 import { Comment } from './comment.entity';
+import { Notification } from './notification.entity';
+import * as bcrypt from 'bcrypt';
+import { UserRole } from '../enums/user-role.enum';
 
-export enum UserRole {
-  STUDENT = 'student',
-  TEACHER = 'teacher',
-  ADMIN = 'admin',
-}
+export { UserRole };
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  @Exclude()
+  password!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
-  @Column({ nullable: true })
-  studentId?: string;
-
-  @Column({ nullable: true })
-  department?: string;
-
-  @Column({ default: false })
-  isAdmin: boolean;
+  @Column({ unique: true })
+  studentId!: string;
 
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.STUDENT,
+    default: UserRole.USER,
   })
-  role: UserRole;
+  role!: UserRole;
 
-  @OneToMany(() => Petition, (petition: Petition) => petition.author)
-  petitions: Petition[];
+  @Column({ default: false })
+  isAdmin!: boolean;
 
-  @OneToMany(() => Vote, (vote: Vote) => vote.user)
-  votes: Vote[];
+  @OneToMany(() => Petition, (petition) => petition.user)
+  petitions!: Petition[];
 
-  @OneToMany(() => Comment, (comment: Comment) => comment.user)
-  comments: Comment[];
+  @OneToMany(() => Vote, (vote) => vote.user)
+  votes!: Vote[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments!: Comment[];
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications!: Notification[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
+
+  @BeforeInsert()
+  async hashPassword() {
+    if (this.password) {
+      this.password = await bcrypt.hash(this.password, 10);
+    }
+  }
+
+  async comparePassword(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.password);
+  }
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+  }
 } 

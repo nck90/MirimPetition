@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { VoteService } from './vote.service';
 import { VoteController } from './vote.controller';
+import { VoteService } from './vote.service';
 import { Vote } from '../entities/vote.entity';
 import { Petition } from '../entities/petition.entity';
 import { User } from '../entities/user.entity';
