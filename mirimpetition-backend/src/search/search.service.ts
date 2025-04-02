@@ -20,15 +20,18 @@ export class SearchService {
     const { status, category, page = 1, limit = 10 } = filters || {};
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    if (status) where.status = status;
-    if (category) where.category = category;
+    const where: any = [];
+    if (status) where.push({ status });
+    if (category) where.push({ category });
     if (query) {
-      where.title = ILike(`%${query}%`);
+      where.push([
+        { title: ILike(`%${query}%`) },
+        { content: ILike(`%${query}%`) }
+      ]);
     }
 
     const [petitions, total] = await this.petitionRepository.findAndCount({
-      where,
+      where: where.length > 0 ? where : undefined,
       relations: ['author', 'votes'],
       skip,
       take: limit,
